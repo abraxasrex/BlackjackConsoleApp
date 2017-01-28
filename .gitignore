@@ -2,3 +2,7 @@
 bin/
 obj/
 [Dd]ebug/
+[Bb]in/
+[Oo]bj/
+
+.gitignore
