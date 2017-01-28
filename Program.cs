@@ -50,63 +50,60 @@ namespace ConsoleApplication
     // endGame() => accepts 'win' or 'lose' parameters and notifies user based on that. stretch: ask for replay  
     public class Program
     {
-     public static List<string> Cards {get; set;}
 
-     public static Game game {get; set; }
         public class Game {
-            // end method goes here  
-            public Dealer dealer;
-            public Player player;
             public void reset(){
-                Console.Write("Your score is: ", player.score);
-                player.hand = new Hand();
-                dealer.hand = new Hand();
-                dealer.hand.AddCard("dealer");
-                dealer.hand.AddCard("dealer");
-                player.hand.AddCard("player");
-                player.hand.AddCard("player");
+                Console.WriteLine("\nYour money pool is: " + player.score + " dollars \n");
+                Console.WriteLine("\n play again? y or n");
+                var response = Console.ReadLine();
+                if(response == "n"){
+                    return;
+                }
+                if(response == "y"){
+                    game.start();
+                }
             }
             public void Lose(){
                 player.score -= 10;
-                Console.Write("You lose!\n");
+                Console.Write("\nYou lose!\n");
                reset();
             }
             public void Push(){
-                Console.Write("It is a push/tie!\n");
+                Console.Write("\nIt is a push/tie!\n");
                reset();
             }
              public void Win(){
                  player.score += 5;
-                Console.Write("You win!\n");
+                Console.Write("\nYou win!\n");
                 reset();
             }
             public void BlackJack(){
                 player.score +=10;
-                Console.Write("You got blackjack!\n");
+                Console.Write("\nYou got blackjack!\n");
                 reset();
             }
             public void Bust() {
                 player.score -= 5;
-                Console.Write("You busted!\n");
+                Console.Write("\nYou busted!\n");
                 reset();
             }
             public void dealerTurn(){
-                Console.WriteLine("Dealer goes.");
-                var pTotal = dealer.hand.calculateTotal();
+                Console.WriteLine("\nDealer goes.");
+                var pTotal = player.hand.calculateTotal();
                 var dTotal = dealer.hand.calculateTotal();
-                if(dTotal == 21){
+                    if(dTotal == 21){
                     Lose();
                     return;
                 }
                 //hit
                 if(dTotal < 17){
-                    dealer.hand.AddCard("dealer");
+                    dealer.hand.AddCard();
                 }
                 //else stand
                 userPrompt();
             }
             public void tryHand(){
-             var pTotal = dealer.hand.calculateTotal();
+             var pTotal = player.hand.calculateTotal();
               var dTotal = dealer.hand.calculateTotal();
               if(pTotal <= 21 && pTotal > dTotal){
                   Win();
@@ -120,47 +117,66 @@ namespace ConsoleApplication
                   Push();
                   return;
               }
-              if(pTotal > 21 || dTotal == 21){
+              if(pTotal < 21 || dTotal == 21){
                   Lose();
                   return;
               }
+              if (pTotal > 21){
+                  Bust();
+                  return;
+              }
+              Console.WriteLine("wrong! :" + pTotal + " " + dTotal);
             }
 
             public void userPrompt(){
-                Console.WriteLine("The dealer shows you a face card: " + dealer.hand.cards[0]);
+            
                 player.writeHand();
-                Console.WriteLine("Make your Move: enter the word hit, stand, or tryhand.");
+                Console.WriteLine("\nMake your Move: enter the word hit, stand, or tryhand.");
                 var response = Console.ReadLine();
                 if(response == "hit"){
-                    player.hand.AddCard("player");
+                    player.hand.AddCard();
                     dealerTurn(); 
                 } else if (response == "stand"){
                     dealerTurn(); 
                 } else if (response == "tryhand"){
                     tryHand();
                 } else {
-                    Console.Write("Invalid response.");
+                    Console.Write("\nInvalid response.\n");
                     userPrompt();
                 }
             }
             public void askAce(){
                 //TODO: askAce
                 Console.WriteLine("You got an ace! blah blah blah!");
+             
             }
 
+            public void start(){
+                 player = new Player();
+                 player.hand.AddCard();
+                 player.hand.AddCard();
+                 dealer = new Dealer();
+                dealer.hand.AddCard();
+                 dealer.hand.AddCard();
+                 userPrompt();
+            }
+        public Random Randy {get; set;}
             public Game (){
-                player = new Player();
-                dealer = new Dealer();
-                userPrompt();
+                Randy = new Random();
             }
         }
-
         public class Hand{
-            public List<string> cards {get; set;}
-            private int total {get; set;}
+            public string userType {get; set; }
+            public List<string> cards {get; set; }
+            private int total {get; set; }
+            public Hand(string type){
+                this.total = 0;
+                cards = new List<string>();
+                userType = type;
+            }
             public int calculateTotal () {
+                var total = 0;
                 foreach(string card in cards){
-                    total = 0;
                     var parsed = 0;
                     var isParsed = int.TryParse(card, out parsed);
                     if(isParsed != false){
@@ -183,10 +199,14 @@ namespace ConsoleApplication
                     tryHandPrompt();
                 }
             }
-            public void AddCard(string userType){
-                var random = new Random();
-                var rnd =  random.Next(0, 12);
-                var card = Cards[rnd];
+    
+            public int randomCard(){
+                var rnd = game.Randy.Next(0, Cards.Count());
+                return rnd;
+            }
+            public void AddCard(){
+                var rnd = randomCard();
+                var card = Cards.ElementAt(rnd);
                 //bust handling
                 if(userType == "player" && total > 21){
                     game.Bust();
@@ -195,77 +215,81 @@ namespace ConsoleApplication
                 // ace handling
                 if(card == "ace"){
                     if(userType == "player"){
-                        game.askAce();
-                    } else if (userType == "dealer"){
-                        var _random = new Random();
-                        var _rnd =  random.Next(0, 1);
-                        if(_rnd == 0){
-                            game.player.hand.AddCard("1");
-                        } else {
-                            game.player.hand.AddCard("11");
+                        Console.WriteLine("\nYou got an ace, do you want 1 or 11?\n?");
+                        var choice = Console.ReadLine();
+                        if(choice == "11"){
+                            player.hand.cards.Add("1");
                         }
-                          calculateTotal();
+                        if(choice == "11") {
+                           player.hand.cards.Add("11");
+                        }
+                    }if (userType == "dealer"){
+                        var _random = new Random();
+                        var _rnd =  _random.Next(0, 1);
+                        if(_rnd == 0){
+                            if(dealer != null){
+                              dealer.hand.cards.Add("1");
+                            }
+                        } else {
+                            if(dealer != null){
+                              dealer.hand.cards.Add("11");
+                            }
+                        }
                     }
                 } else {
                     if(userType == "player"){
-                     game.player.hand.AddCard(Cards[rnd]);
+                        if(player != null) {
+                            player.hand.cards.Add(card);
+                        }
                     } else if(userType == "dealer") {
-                     game.dealer.hand.AddCard(Cards[rnd]);
+                        if(dealer != null){
+                            dealer.hand.cards.Add(card);
+                        }
                     }
-                    calculateTotal();
                 }
-            }
-            // public void RemoveCard(string card){
-            //     var itemToRemove = cards.SingleOrDefault(c => c == card);
-            //     if (itemToRemove != null){
-            //       cards.Remove(card);
-            //     }
-            // }
-            public Hand(){
-                this.total = 0;
-                List<string>cards = new List<string>();
+                calculateTotal();
             }
         }
-         public class Player{
-             public Hand hand;
-              public int score {get; set;}
-              public void writeHand() {
-                 Console.WriteLine("Your hand: \n");
-                 foreach(string card in hand.cards){
-                     Console.WriteLine("\n" + card);
-                 }
-              }
-             public Player(){
-                 score = 0;
-                 hand = new Hand();
-                 hand.AddCard("player");
-                 hand.AddCard("player");
+        
+         public class Player {
+            public Player(){
+                score = 0;
+                hand = new Hand("player");
+               //  if(hand == null) { throw new Exception("Bryan SAID there is no hand!");}
+                hand.cards = new List<string>();
              }
+             public Hand hand {get; set; }
+              public int score {get; set; }
+              public void writeHand() {
+                 Console.WriteLine("\nYour hand: \n");
+                 foreach(string card in hand.cards){
+                     Console.WriteLine(" " + card);
+                 }
+                 Console.WriteLine("\nYour total: " + player.hand.calculateTotal() + "\n");
+              }
         }
-        public class Dealer{
-            public Hand hand;
+        public class Dealer {
+            public Hand hand {get; set;}
             public int score {get; set;}
             public Dealer(){
-                score = 0;
-                hand = new Hand();
-                hand.AddCard("dealer");
-                hand.AddCard("dealer");
+               score = 0;
+               hand = new Hand("dealer");
+              hand.cards = new List<string>();
             }
         }
-        public static void Main(string[] args)
-        {   
-            // initialize cards  
-            var cards = new string [] {
+        static readonly IEnumerable<string> Cards = new string [] {
                 "2","3","4","5","6","7","8","9","king","queen","jack","ace"
            };
-           List<string>Cards = new List<string>();
-            foreach (string card in cards){
-                Cards.Add(card);
-            }
+
+        static Game game {get; set;}
+
+        static Player player {get; set; }
+        static Dealer dealer {get; set; }
+        public static void Main(string[] args)
+        {   
            //initialize game
            game = new Game();
-    
-            //Console.WriteLine("Hello World!");
+           game.start();
         }
     }
 }
