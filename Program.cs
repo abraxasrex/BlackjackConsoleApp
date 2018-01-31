@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+//for lesson only
+using System.Threading.Tasks;
+
 namespace ConsoleApplication
 {
     // Create a Blackjack game that enables you to compete against the computer (the dealer). Here are the rules for Blackjack:
@@ -285,6 +288,11 @@ namespace ConsoleApplication
 
         static Player player {get; set; }
         static Dealer dealer {get; set; }
+        public async static Task<int> SlowAdd(int a, int b){
+            await Task.Delay(5000);
+            return a + b;
+          //  Console.WriteLine(a + b);
+        }
         public static void Main(string[] args)
         {   
            //initialize game
